@@ -186,14 +186,6 @@ TaskManagementSystem/
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 
-## Used By
-
-This project is used by the following companies:
-
-- Company 1
-- Company 2
-
-
 ## Authors
 
 - [Amrutha](https://www.github.com/amruthadevops)
