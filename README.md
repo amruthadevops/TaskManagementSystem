@@ -179,6 +179,21 @@ TaskManagementSystem/
 └── docker-compose.yml                # Docker Compose Config
 
 ```
+### Register
+<img width="1360" height="675" alt="image" src="https://github.com/user-attachments/assets/ac2d8a36-e0c4-439d-adc8-037bc87443d4" />
+
+### Logiin 
+<img width="1364" height="674" alt="image" src="https://github.com/user-attachments/assets/df53d162-64e2-450c-bb9d-42200fe853de" />
+
+
+###  Dashboard
+<img width="1360" height="683" alt="Image" src="https://github.com/user-attachments/assets/11225581-d977-44a3-9deb-a0470a4dce2b" />
+
+### Task Management
+<img width="1361" height="678" alt="Image" src="https://github.com/user-attachments/assets/14db8816-c81a-4901-968f-43a6c7f8c9d1" />
+
+### Team Management
+<img width="1363" height="675" alt="Image" src="https://github.com/user-attachments/assets/dbb7b07c-cd31-4d9f-8f6e-c8e687721d12" />
 
 
 
