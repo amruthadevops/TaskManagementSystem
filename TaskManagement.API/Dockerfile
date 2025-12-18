@@ -1,14 +1,20 @@
-# Base image for running the app
+# Base image (runtime)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-# Image for building the app
+# Build image
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+
+# Copy solution files
 COPY . .
-RUN dotnet restore
-RUN dotnet publish -c Release -o /app/publish
+
+# Restore using API project
+RUN dotnet restore TaskManagement.API/TaskManagement.API.csproj
+
+# Publish
+RUN dotnet publish TaskManagement.API/TaskManagement.API.csproj -c Release -o /app/publish
 
 # Final image
 FROM base AS final
