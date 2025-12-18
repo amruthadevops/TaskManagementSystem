@@ -236,19 +236,19 @@ const MyTasks: React.FC = () => {
               <div className="flex gap-2 flex-wrap">
                 <button
                   className="px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
-                  onClick={() => onChangeStatus(0)}
+                  onClick={() => onChangeStatus(1)}
                 >
                   To Do
                 </button>
                 <button
                   className="px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
-                  onClick={() => onChangeStatus(1)}
+                  onClick={() => onChangeStatus(2)}
                 >
                   In Progress
                 </button>
                 <button
                   className="px-3 py-2 rounded-md border text-sm hover:bg-gray-50"
-                  onClick={() => onChangeStatus(2)}
+                  onClick={() => onChangeStatus(3)}
                 >
                   Done
                 </button>

@@ -47,9 +47,9 @@ namespace TaskManagement.API.Controllers
                 var task = await _taskService.GetTaskByIdAsync(id, userId, userRole);
                 return Ok(ApiResponse<TaskDto>.SuccessResponse(task));
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (Exception ex)
             {
@@ -100,9 +100,9 @@ namespace TaskManagement.API.Controllers
                 var task = await _taskService.UpdateTaskAsync(id, updateTaskDto, userId, userRole);
                 return Ok(ApiResponse<TaskDto>.SuccessResponse(task, "Task updated successfully"));
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (Exception ex)
             {
@@ -122,9 +122,9 @@ namespace TaskManagement.API.Controllers
                 await _taskService.DeleteTaskAsync(id, userId, userRole);
                 return Ok(ApiResponse<object?>.SuccessResponse(null, "Task deleted successfully"));
             }
-            catch (UnauthorizedAccessException ex)
+            catch (UnauthorizedAccessException)
             {
-                return Forbid(ex.Message);
+                return Forbid();
             }
             catch (Exception ex)
             {

@@ -136,24 +136,46 @@ namespace TaskManagement.Application.Services
             if (task == null)
                 throw new Exception("Task not found");
 
-            if (!await CanModifyTaskAsync(task, userId, userRole))
-                throw new UnauthorizedAccessException("Access denied");
+            var canModify = await CanModifyTaskAsync(task, userId, userRole);
+
+            // Allow assignees to update ONLY the status
+            var isStatusOnlyUpdate =
+                dto.Status.HasValue &&
+                dto.Title == null &&
+                dto.Description == null &&
+                !dto.Priority.HasValue &&
+                !dto.DueDate.HasValue &&
+                !dto.AssignedToId.HasValue &&
+                !dto.TeamId.HasValue;
+
+            if (!canModify)
+            {
+                if (!(isStatusOnlyUpdate && task.AssignedToId.HasValue && task.AssignedToId.Value == userId))
+                    throw new UnauthorizedAccessException("Access denied");
+            }
 
             var oldStatus = task.Status;
 
-            if (dto.Title != null) task.Title = dto.Title;
-            if (dto.Description != null) task.Description = dto.Description;
-            if (dto.Status.HasValue) task.Status = (TaskManagement.Core.Entities.TaskStatus)dto.Status.Value;
-            if (dto.Priority.HasValue) task.Priority = (TaskPriority)dto.Priority.Value;
-            if (dto.DueDate.HasValue) task.DueDate = dto.DueDate;
-            
-            // Handle AssignedToId - null means clear it
-            if (dto.AssignedToId.HasValue)
-                task.AssignedToId = dto.AssignedToId.Value > 0 ? dto.AssignedToId : null;
-            
-            // Handle TeamId - null means clear it
-            if (dto.TeamId.HasValue)
-                task.TeamId = dto.TeamId.Value > 0 ? dto.TeamId : null;
+            if (canModify)
+            {
+                if (dto.Title != null) task.Title = dto.Title;
+                if (dto.Description != null) task.Description = dto.Description;
+                if (dto.Status.HasValue) task.Status = (TaskManagement.Core.Entities.TaskStatus)dto.Status.Value;
+                if (dto.Priority.HasValue) task.Priority = (TaskPriority)dto.Priority.Value;
+                if (dto.DueDate.HasValue) task.DueDate = dto.DueDate;
+
+                // Handle AssignedToId - null means clear it
+                if (dto.AssignedToId.HasValue)
+                    task.AssignedToId = dto.AssignedToId.Value > 0 ? dto.AssignedToId : null;
+
+                // Handle TeamId - null means clear it
+                if (dto.TeamId.HasValue)
+                    task.TeamId = dto.TeamId.Value > 0 ? dto.TeamId : null;
+            }
+            else if (isStatusOnlyUpdate)
+            {
+                task.Status = (TaskManagement.Core.Entities.TaskStatus)dto.Status!.Value;
+            }
 
             task.UpdatedAt = DateTime.UtcNow;
 
