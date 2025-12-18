@@ -13,11 +13,15 @@ using TaskManagement.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// =======================
+// Add services
+// =======================
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger Configuration with JWT
+// =======================
+// Swagger + JWT
+// =======================
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -29,7 +33,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token",
+        Description = "JWT Authorization header using the Bearer scheme. Example: Bearer {token}",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -52,28 +56,32 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Database Configuration
+// =======================
+// Database
+// =======================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         b => b.MigrationsAssembly("TaskManagement.Infrastructure")
     ));
 
-// Configure Jwt from configuration/environment
-builder.Services.Configure<TaskManagement.Core.Settings.JwtSettings>(
+// =======================
+// JWT Configuration
+// =======================
+builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt")
 );
 
-builder.Services.AddSingleton<TaskManagement.Core.Interfaces.IJwtSettings>(sp =>
-    sp.GetRequiredService<IOptions<TaskManagement.Core.Settings.JwtSettings>>().Value
+builder.Services.AddSingleton<IJwtSettings>(sp =>
+    sp.GetRequiredService<IOptions<JwtSettings>>().Value
 );
 
-// Read JWT key at runtime safely
 var jwtSection = builder.Configuration.GetSection("Jwt");
-var keyValue = jwtSection["Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+var keyValue = jwtSection["Key"]
+    ?? throw new InvalidOperationException("JWT Key not configured");
+
 var key = Encoding.ASCII.GetBytes(keyValue);
 
-// Configure JWT authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -92,19 +100,23 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// CORS Configuration
+// =======================
+// CORS (Render + Local)
+// =======================
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
-// Dependency Injection - Register services
+// =======================
+// Dependency Injection
+// =======================
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
@@ -113,48 +125,57 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
-// Add logging
+// =======================
+// Logging
+// =======================
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.AddDebug();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Task Management API V1");
-        c.RoutePrefix = string.Empty; // Set Swagger UI at app's root
-    });
-}
+// =======================
+// Middleware pipeline
+// =======================
 
-app.UseHttpsRedirection();
-app.UseCors("AllowReactApp");
+// IMPORTANT: Enable Swagger in ALL environments (Render = Production)
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Task Management API V1");
+    c.RoutePrefix = "swagger"; // Swagger at /swagger
+});
+
+// Root endpoint (prevents 404 confusion)
+app.MapGet("/", () => "Task Management API is running successfully 🚀");
+
+// REMOVE HTTPS redirection for Render
+// app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
-// Seed database (optional)
+// =======================
+// Database Migration / Seeding
+// =======================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-
-        // Apply pending migrations
         context.Database.Migrate();
-
-        // Seed initial data
         DbInitializer.Initialize(context);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
+        logger.LogError(ex, "Error during migration or seeding");
     }
 }
 
